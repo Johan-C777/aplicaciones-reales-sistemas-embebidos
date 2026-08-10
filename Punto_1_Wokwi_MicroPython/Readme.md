@@ -51,4 +51,4 @@ El proyecto fue desarrollado y probado utilizando Wokwi con un ESP32 y MicroPyth
 
 ## Enlace de Wokwi
 
-[Ver simulación en Wokwi]https://wokwi.com/projects/471976762101862401
+https://wokwi.com/projects/471976762101862401
