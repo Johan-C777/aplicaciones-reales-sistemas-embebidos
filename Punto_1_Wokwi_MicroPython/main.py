@@ -1,23 +1,11 @@
 from machine import Pin
 import uasyncio as asyncio
 
-# =====================================================
-# GPIO DEFINITIONS
-# =====================================================
-
 BUTTON1_GPIO = 13
 BUTTON2_GPIO = 14
 
 LED1_GPIO = 25
 LED2_GPIO = 26
-
-
-# =====================================================
-# SIMPLE ASYNC QUEUE
-# MicroPython's built-in uasyncio does not provide Queue
-# in every firmware/build, so we implement the small
-# bounded queue needed for this exercise.
-# =====================================================
 
 class AsyncQueue:
     def __init__(self, maxsize=10):
@@ -36,11 +24,6 @@ class AsyncQueue:
 
         return self.data.pop(0)
 
-
-# =====================================================
-# GPIO INITIALIZATION
-# =====================================================
-
 led1 = Pin(LED1_GPIO, Pin.OUT)
 led2 = Pin(LED2_GPIO, Pin.OUT)
 
@@ -50,20 +33,10 @@ led2.value(0)
 button1 = Pin(BUTTON1_GPIO, Pin.IN, Pin.PULL_UP)
 button2 = Pin(BUTTON2_GPIO, Pin.IN, Pin.PULL_UP)
 
-
-# =====================================================
-# IPC OBJECTS
-# =====================================================
-
 sensor_queue = AsyncQueue(10)
 
 button1_flag = asyncio.ThreadSafeFlag()
 button2_flag = asyncio.ThreadSafeFlag()
-
-
-# =====================================================
-# INTERRUPT SERVICE ROUTINES
-# =====================================================
 
 def button1_isr(pin):
     button1_flag.set()
@@ -83,11 +56,6 @@ button2.irq(
     handler=button2_isr
 )
 
-
-# =====================================================
-# PRODUCER TASK
-# =====================================================
-
 async def producer_task():
     count = 0
 
@@ -102,11 +70,6 @@ async def producer_task():
 
         await asyncio.sleep_ms(1000)
 
-
-# =====================================================
-# CONSUMER TASK
-# =====================================================
-
 async def consumer_task():
     while True:
         received_val = await sensor_queue.get()
@@ -115,11 +78,6 @@ async def consumer_task():
             "[CONSUMER] Received Sensor Data:",
             received_val
         )
-
-
-# =====================================================
-# BUTTON 1 TASK
-# =====================================================
 
 async def button1_task():
     while True:
@@ -137,11 +95,6 @@ async def button1_task():
             led1.value(0)
             print("[BUTTON 1] RELEASED -> LED1 OFF")
 
-
-# =====================================================
-# BUTTON 2 TASK
-# =====================================================
-
 async def button2_task():
     while True:
         await button2_flag.wait()
@@ -158,10 +111,7 @@ async def button2_task():
             led2.value(0)
             print("[BUTTON 2] RELEASED -> LED2 OFF")
 
-
-# =====================================================
-# MAIN APPLICATION
-# =====================================================
+# MAIN
 
 async def main():
     print()
