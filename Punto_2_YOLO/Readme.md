@@ -1,21 +1,50 @@
-# Punto 2 - Revisión y prueba de YOLO
+# Punto 2 - Revisión del funcionamiento de YOLO
 
 ## Objetivo
 
-Revisar el funcionamiento de la arquitectura YOLO presentada en el material suministrado por el docente y realizar una prueba básica de detección de objetos utilizando Python.
+Revisar y comprender el funcionamiento de YOLO a partir del material suministrado por el docente.
+
+Como complemento a la revisión teórica, se realizó una prueba básica utilizando Python, OpenCV y Ultralytics para observar el funcionamiento del modelo en tiempo real mediante la cámara del computador.
 
 ## ¿Qué es YOLO?
 
 YOLO significa **You Only Look Once**.
 
-Es una arquitectura de visión artificial utilizada para detectar objetos dentro de imágenes o video en tiempo real.
+Es una arquitectura de visión artificial utilizada para la detección de objetos en imágenes y video.
 
-El modelo puede identificar diferentes objetos y entregar información como:
+Su principal característica es que analiza una imagen y realiza las detecciones en una sola etapa, permitiendo identificar objetos de manera rápida y siendo adecuada para aplicaciones en tiempo real.
 
-- Clase detectada.
-- Posición del objeto.
-- Caja delimitadora.
+## Información obtenida por YOLO
+
+Al procesar una imagen, YOLO puede entregar información como:
+
+- Clase del objeto detectado.
+- Posición del objeto dentro de la imagen.
+- Caja delimitadora o *bounding box*.
 - Nivel de confianza de la detección.
+
+## Flujo básico de funcionamiento
+
+El funcionamiento general utilizado durante la prueba fue:
+
+```text
+Cámara
+   |
+   v
+Captura de imagen
+   |
+   v
+Modelo YOLO
+   |
+   v
+Detección de objetos
+   |
+   v
+Clase + confianza + posición
+   |
+   v
+Visualización con OpenCV
+```
 
 ## Herramientas utilizadas
 
@@ -34,7 +63,7 @@ Se creó un entorno virtual de Python mediante:
 python -m venv yolo_env
 ```
 
-Posteriormente se activó el entorno y se instalaron las librerías necesarias:
+Posteriormente se instalaron las librerías requeridas:
 
 ```bash
 pip install ultralytics opencv-python
@@ -42,187 +71,116 @@ pip install ultralytics opencv-python
 
 ## Modelo utilizado
 
-Se utilizó el modelo:
+Para realizar la prueba se utilizó:
 
 ```text
 yolov8n.pt
 ```
 
-Este corresponde a la versión **Nano de YOLOv8**, seleccionada por su bajo costo computacional y su capacidad para realizar detecciones en tiempo real.
+Este corresponde a la versión **Nano de YOLOv8**, adecuada para realizar pruebas de detección en tiempo real debido a su menor costo computacional.
 
-## Funcionamiento del programa
+## Carga del modelo
 
-El programa desarrollado realiza el siguiente procedimiento:
-
-1. Carga el modelo YOLOv8.
-2. Abre la cámara del computador mediante OpenCV.
-3. Captura continuamente imágenes de la cámara.
-4. Envía cada imagen al modelo YOLO.
-5. Obtiene los objetos detectados.
-6. Identifica la clase de cada objeto.
-7. Filtra únicamente las clases de interés.
-8. Muestra las detecciones sobre el video.
-9. Presenta el nivel de confianza de cada detección.
-
-## Clases de interés
-
-Para el desarrollo del ejercicio se utilizaron las siguientes clases:
+El modelo se carga utilizando la librería Ultralytics:
 
 ```python
-TARGET_CLASSES = {"car", "motorcycle"}
+from ultralytics import YOLO
+
+model = YOLO("yolov8n.pt")
 ```
 
-Estas clases permiten identificar:
-
-- `car`: carro.
-- `motorcycle`: motocicleta.
-
-Estas detecciones serán utilizadas posteriormente en el Punto 3 para controlar los LEDs del ESP32.
-
-## Nivel mínimo de confianza
-
-Se estableció un nivel mínimo de confianza para evitar considerar detecciones poco confiables:
-
-```python
-MIN_CONFIDENCE = 0.45
-```
-
-Esto significa que únicamente se consideran detecciones con una confianza igual o superior al 45 %.
+Una vez cargado, el modelo queda disponible para procesar imágenes o video.
 
 ## Captura de video
 
-La cámara se abre mediante OpenCV utilizando:
+Para obtener imágenes en tiempo real se utilizó OpenCV:
 
 ```python
+import cv2
+
 cap = cv2.VideoCapture(0)
 ```
 
 El valor `0` corresponde normalmente a la cámara principal del computador.
 
-El video se procesa con una resolución aproximada de:
+Cada imagen obtenida de la cámara se denomina `frame`.
 
-```text
-640 x 480 píxeles
+```python
+ret, frame = cap.read()
 ```
 
-## Detección con YOLO
+## Procesamiento mediante YOLO
 
-Cada imagen capturada por la cámara se procesa utilizando:
+Cada frame capturado puede enviarse al modelo mediante:
 
 ```python
 results = model.predict(
     source=frame,
-    conf=MIN_CONFIDENCE,
     verbose=False
 )
 ```
 
-YOLO analiza la imagen y devuelve las detecciones encontradas.
+YOLO procesa la imagen y devuelve los objetos detectados.
 
-Posteriormente se obtiene la clase detectada mediante:
+## Resultados de la detección
+
+Los resultados obtenidos contienen información de cada objeto identificado.
+
+Por ejemplo:
+
+```python
+for box in results[0].boxes:
+    class_id = int(box.cls.item())
+    confidence = float(box.conf.item())
+```
+
+`class_id` representa la clase identificada y `confidence` representa el nivel de confianza de la detección.
+
+El nombre correspondiente a una clase puede obtenerse mediante:
 
 ```python
 class_name = model.names[class_id]
 ```
 
-El programa verifica si la clase corresponde a un carro o una motocicleta.
-
-## Detección de carro
-
-Cuando se detecta un carro:
-
-```python
-if class_name == "car":
-    car_detected = True
-```
-
-En la consola se muestra un mensaje indicando la detección y su nivel de confianza.
-
-Ejemplo:
-
-```text
-[DETECCION] CARRO | confianza=0.87
-```
-
-## Detección de motocicleta
-
-Cuando se detecta una motocicleta:
-
-```python
-elif class_name == "motorcycle":
-    motorcycle_detected = True
-```
-
-En la consola se muestra un mensaje similar a:
-
-```text
-[DETECCION] MOTO | confianza=0.76
-```
-
 ## Visualización
 
-OpenCV muestra en pantalla el video procesado con las cajas de detección generadas por YOLO.
+Ultralytics permite generar automáticamente una imagen con las cajas delimitadoras y nombres de los objetos detectados:
 
-Además, se muestran mensajes como:
-
-```text
-CARRO DETECTADO
+```python
+annotated_frame = results[0].plot()
 ```
 
-o:
+Posteriormente OpenCV permite mostrar el resultado:
 
-```text
-MOTO DETECTADA
+```python
+cv2.imshow("YOLO", annotated_frame)
 ```
 
-dependiendo del objeto reconocido.
+De esta manera es posible observar en tiempo real los objetos reconocidos por el modelo.
 
-## Ejecución
+## Conclusión
 
-Para ejecutar el programa se utiliza:
+La revisión permitió comprender el flujo básico de funcionamiento de YOLO:
 
-```bash
-python yolo_test.py
-```
+1. Se obtiene una imagen.
+2. La imagen se entrega al modelo.
+3. YOLO procesa la información.
+4. Se identifican los objetos presentes.
+5. Para cada detección se obtiene una clase, posición y nivel de confianza.
+6. Los resultados pueden utilizarse posteriormente dentro de otras aplicaciones.
 
-La aplicación abre la cámara y comienza la detección en tiempo real.
+## Archivo de prueba
 
-Para finalizar la ejecución se presiona la tecla:
-
-```text
-Q
-```
-
-## Archivo principal
-
-El archivo principal correspondiente a este punto es:
+Como evidencia de la revisión se incluye:
 
 ```text
 yolo_test.py
 ```
 
-Este archivo contiene el código utilizado para probar la detección de objetos mediante YOLO y OpenCV.
-
-## Relación con el Punto 3
-
-Este punto funciona como base para la integración con el ESP32.
-
-En el siguiente punto se utilizarán las detecciones obtenidas por YOLO para realizar el siguiente control:
-
-```text
-Carro detectado
-      |
-      v
-LED rojo encendido
-
-Moto detectada
-      |
-      v
-LED verde encendido
-```
+Este programa permite comprobar el funcionamiento de YOLO utilizando la cámara del computador.
 
 ## Referencia
 
-El funcionamiento de YOLO fue revisado a partir del material suministrado por el docente:
+Material suministrado por el docente:
 
 https://github.com/dialejobv/aplicacion_sistemas_embebidos
