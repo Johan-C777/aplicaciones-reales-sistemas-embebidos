@@ -52,3 +52,13 @@ El proyecto fue desarrollado y probado utilizando Wokwi con un ESP32 y MicroPyth
 ## Enlace de Wokwi
 
 https://wokwi.com/projects/471976762101862401
+
+## Evidencias físicas
+
+### Prueba LED rojo
+
+![Prueba LED rojo](evidencias/prueba_led_rojo.jpg)
+
+### Prueba LED verde
+
+![Prueba LED verde](evidencias/prueba_led_verde.jpg)
