@@ -399,3 +399,17 @@ La práctica permitió integrar un sistema de visión artificial con un sistema 
 YOLO se encarga del procesamiento computacional de las imágenes, mientras que el ESP32 recibe únicamente el resultado de la detección.
 
 La comunicación mediante MQTT permite separar ambas partes del sistema y transmitir los comandos necesarios para controlar las salidas digitales del ESP32.
+
+## Evidencias físicas
+
+### Detección de carro - LED rojo
+
+![Carro y LED rojo](evidencias/carro_led_rojo_1.jpg)
+
+![Carro y LED rojo - segunda prueba](evidencias/carro_led_rojo_2.jpg)
+
+### Detección de motocicleta - LED verde
+
+![Moto y LED verde](evidencias/moto_led_verde_1.jpg)
+
+![Moto y LED verde - segunda prueba](evidencias/moto_led_verde_2.jpg)
